@@ -18,6 +18,7 @@ const menuItems = [
   { title: "Suppliers", icon: <Truck size={20} />, path: "/suppliers" },
   { title: "Dealers", icon: <Store size={20} />, path: "/dealers" },
   { title: "Billing", icon: <Receipt size={20} />, path: "/billing" },
+  { title: "Expense", icon: <Receipt size={20} />, path: "/expense" },
 ];
 
 const Sidebar = ({ user, onLogout }) => {
