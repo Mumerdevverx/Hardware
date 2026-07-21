@@ -1,13 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../config";
-import { Package, Search, Plus, Minus, ShoppingBag, X, Wallet, CreditCard } from "lucide-react";
+import {
+  Package,
+  Search,
+  Plus,
+  Minus,
+  ShoppingBag,
+  X,
+  Wallet,
+  CreditCard,
+} from "lucide-react";
 import { useToast } from "../toast/ToastProvider";
 
 const Home = () => {
+  const CART_STORAGE_KEY = "pos-cart";
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [showCartPopup, setShowCartPopup] = useState(false);
   const { addToast } = useToast();
@@ -39,13 +56,13 @@ const Home = () => {
     try {
       const token = localStorage.getItem("pos-token");
       const response = await fetch(`${API_URL}/api/items`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         let itemsArray = [];
-        
+
         if (data && Array.isArray(data)) {
           itemsArray = data;
         } else if (data && data.items && Array.isArray(data.items)) {
@@ -55,7 +72,7 @@ const Home = () => {
         } else {
           itemsArray = [];
         }
-        
+
         if (itemsArray.length > 0) {
           setItems(itemsArray);
           localStorage.setItem("pos-items", JSON.stringify(itemsArray));
@@ -104,48 +121,46 @@ const Home = () => {
   }, []);
 
   // Filter items based on search
-  const filteredItems = items.filter(item =>
-    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredItems = items.filter(
+    (item) =>
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Add item to cart (click on card)
   const addToCart = (item) => {
-    setSelectedItems(prev => {
-      const existing = prev.find(i => (i._id || i.id) === (item._id || item.id));
+    setSelectedItems((prev) => {
+      const existing = prev.find(
+        (i) => (i._id || i.id) === (item._id || item.id),
+      );
       if (existing) {
-        return prev.map(i =>
-          (i._id || i.id) === (item._id || item.id)
-            ? { ...i, quantity: (i.quantity || 0) + 1 }
-            : i
-        );
+        addToast(`${item.name} is already in the cart.`, "error");
+        return prev;
       }
+      addToast(`${item.name} added to cart! 🛒`, "success");
       return [...prev, { ...item, quantity: 1 }];
     });
-    addToast(`${item.name} added to cart! 🛒`, "success");
   };
 
   // Update quantity in cart popup
   const updatePopupQuantity = (itemId, change) => {
-    setSelectedItems(prev => {
-      const item = prev.find(i => (i._id || i.id) === itemId);
+    setSelectedItems((prev) => {
+      const item = prev.find((i) => (i._id || i.id) === itemId);
       if (!item) return prev;
-      
+
       const newQuantity = (item.quantity || 0) + change;
       if (newQuantity <= 0) {
-        return prev.filter(i => (i._id || i.id) !== itemId);
+        return prev.filter((i) => (i._id || i.id) !== itemId);
       }
-      return prev.map(i =>
-        (i._id || i.id) === itemId
-          ? { ...i, quantity: newQuantity }
-          : i
+      return prev.map((i) =>
+        (i._id || i.id) === itemId ? { ...i, quantity: newQuantity } : i,
       );
     });
   };
 
   // Remove item from cart
   const removeFromCart = (itemId) => {
-    setSelectedItems(prev => prev.filter(i => (i._id || i.id) !== itemId));
+    setSelectedItems((prev) => prev.filter((i) => (i._id || i.id) !== itemId));
     addToast("Item removed from cart", "info");
     if (selectedItems.length === 1) {
       setShowCartPopup(false);
@@ -155,13 +170,16 @@ const Home = () => {
   // Calculate total
   const calculateTotal = () => {
     return selectedItems.reduce((sum, item) => {
-      return sum + (Number(item.salePrice || 0) * Number(item.quantity || 0));
+      return sum + Number(item.salePrice || 0) * Number(item.quantity || 0);
     }, 0);
   };
 
   // Calculate total items in cart
   const getTotalItems = () => {
-    return selectedItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    return selectedItems.reduce(
+      (sum, item) => sum + Number(item.quantity || 0),
+      0,
+    );
   };
 
   // Navigate to billing
@@ -175,8 +193,8 @@ const Home = () => {
       state: {
         items: selectedItems,
         total: calculateTotal(),
-        paymentMethod: 'cash'
-      }
+        paymentMethod: "cash",
+      },
     });
   };
 
@@ -185,6 +203,7 @@ const Home = () => {
     if (selectedItems.length === 0) return;
     if (window.confirm("Are you sure you want to clear your cart?")) {
       setSelectedItems([]);
+      localStorage.removeItem(CART_STORAGE_KEY);
       addToast("Cart cleared", "info");
       setShowCartPopup(false);
     }
@@ -198,6 +217,14 @@ const Home = () => {
     }
     setShowCartPopup(!showCartPopup);
   };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(selectedItems));
+    } catch (error) {
+      console.error("Error saving cart to localStorage:", error);
+    }
+  }, [selectedItems]);
 
   if (loading) {
     return (
@@ -265,18 +292,22 @@ const Home = () => {
           <Package className="w-16 h-16 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">No products found</p>
           <p className="text-gray-400 text-sm mt-1">
-            {searchTerm ? "Try a different search term" : "Click 'Add New Item' to create your first product."}
+            {searchTerm
+              ? "Try a different search term"
+              : "Click 'Add New Item' to create your first product."}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredItems.map((item) => {
-            const isInCart = selectedItems.some(i => (i._id || i.id) === (item._id || item.id));
+            const isInCart = selectedItems.some(
+              (i) => (i._id || i.id) === (item._id || item.id),
+            );
             return (
               <div
                 key={item._id || item.id}
                 className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer group ${
-                  isInCart ? 'border-green-500 border-2' : 'border-gray-200'
+                  isInCart ? "border-green-500 border-2" : "border-gray-200"
                 }`}
                 onClick={() => addToCart(item)}
               >
@@ -288,7 +319,7 @@ const Home = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.style.display = 'none';
+                        e.target.style.display = "none";
                         e.target.parentElement.innerHTML = `
                           <div class="w-full h-full flex items-center justify-center bg-gray-100">
                             <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,21 +345,25 @@ const Home = () => {
                   )}
                 </div>
                 <div className="p-3">
-                  <h3 className="font-semibold text-gray-800 text-sm truncate">{item.name}</h3>
+                  <h3 className="font-semibold text-gray-800 text-sm truncate">
+                    {item.name}
+                  </h3>
                   <div className="flex justify-between items-center mt-2">
-                    <p className="text-lg font-bold text-blue-600">₹{Number(item.salePrice || 0).toFixed(2)}</p>
+                    <p className="text-lg font-bold text-blue-600">
+                      ₹{Number(item.salePrice || 0).toFixed(2)}
+                    </p>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         addToCart(item);
                       }}
                       className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 ${
-                        isInCart 
-                          ? 'bg-green-500 text-white hover:bg-green-600' 
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                        isInCart
+                          ? "bg-green-500 text-white hover:bg-green-600"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                     >
-                      <Plus size={14} /> {isInCart ? 'Added' : 'Add'}
+                      <Plus size={14} /> {isInCart ? "Added" : "Add"}
                     </button>
                   </div>
                 </div>
@@ -373,17 +408,26 @@ const Home = () => {
                 <div className="text-center py-12">
                   <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 text-lg">Your cart is empty</p>
-                  <p className="text-gray-400 text-sm">Add some items from the dashboard</p>
+                  <p className="text-gray-400 text-sm">
+                    Add some items from the dashboard
+                  </p>
                 </div>
               ) : (
                 <>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {selectedItems.map((item) => (
-                      <div key={item._id || item.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition">
+                      <div
+                        key={item._id || item.id}
+                        className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition"
+                      >
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium text-gray-800">{item.name}</p>
-                            <p className="text-sm text-gray-500">₹{Number(item.salePrice || 0).toFixed(2)}</p>
+                            <p className="font-medium text-gray-800">
+                              {item.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              ₹{Number(item.salePrice || 0).toFixed(2)}
+                            </p>
                           </div>
                           <button
                             onClick={() => removeFromCart(item._id || item.id)}
@@ -395,21 +439,31 @@ const Home = () => {
                         <div className="flex items-center justify-between mt-3">
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => updatePopupQuantity(item._id || item.id, -1)}
+                              onClick={() =>
+                                updatePopupQuantity(item._id || item.id, -1)
+                              }
                               className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition text-lg font-bold"
                             >
                               −
                             </button>
-                            <span className="font-bold text-lg w-8 text-center">{item.quantity}</span>
+                            <span className="font-bold text-lg w-8 text-center">
+                              {item.quantity}
+                            </span>
                             <button
-                              onClick={() => updatePopupQuantity(item._id || item.id, 1)}
+                              onClick={() =>
+                                updatePopupQuantity(item._id || item.id, 1)
+                              }
                               className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition text-lg font-bold"
                             >
                               +
                             </button>
                           </div>
                           <p className="font-bold text-blue-600 text-lg">
-                            ₹{(Number(item.salePrice || 0) * Number(item.quantity || 0)).toFixed(2)}
+                            ₹
+                            {(
+                              Number(item.salePrice || 0) *
+                              Number(item.quantity || 0)
+                            ).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -419,10 +473,14 @@ const Home = () => {
                   {/* Total and Action */}
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-bold text-gray-700">Total:</span>
-                      <span className="text-2xl font-bold text-blue-600">₹{calculateTotal().toFixed(2)}</span>
+                      <span className="text-lg font-bold text-gray-700">
+                        Total:
+                      </span>
+                      <span className="text-2xl font-bold text-blue-600">
+                        ₹{calculateTotal().toFixed(2)}
+                      </span>
                     </div>
-                    
+
                     <button
                       onClick={goToBilling}
                       className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center gap-2 text-lg"

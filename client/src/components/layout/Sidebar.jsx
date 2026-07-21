@@ -8,11 +8,17 @@ import {
   Receipt,
   Users,
   LogOut,
-  Store
+  Store,
+  History as HistoryIcon,
+  DollarSign,
+  BarChart3,
 } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/home" },
+  { title: "History", icon: <HistoryIcon size={20} />, path: "/history" },
+  { title: "Barrow", icon: <DollarSign size={20} />, path: "/barrow" },
+  { title: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
   { title: "Add Items", icon: <Package size={20} />, path: "/add-items" },
   { title: "Stocks", icon: <Layers size={20} />, path: "/stocks" },
   { title: "Suppliers", icon: <Truck size={20} />, path: "/suppliers" },
@@ -41,7 +47,9 @@ const Sidebar = ({ user, onLogout }) => {
             key={item.title}
             to={item.path}
             className={`flex items-center gap-3 px-6 py-3 hover:bg-gray-800 cursor-pointer transition ${
-              location.pathname === item.path ? "bg-gray-800 border-r-4 border-blue-500" : ""
+              location.pathname === item.path
+                ? "bg-gray-800 border-r-4 border-blue-500"
+                : ""
             }`}
           >
             {item.icon}
@@ -51,7 +59,10 @@ const Sidebar = ({ user, onLogout }) => {
       </nav>
 
       <div className="border-t border-gray-700 p-4">
-        <button onClick={onLogout} className="flex items-center gap-3 w-full hover:text-red-400 transition">
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-3 w-full hover:text-red-400 transition"
+        >
           <LogOut size={20} />
           Logout
         </button>
