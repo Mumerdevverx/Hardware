@@ -37,6 +37,21 @@ const Reports = () => {
   useEffect(() => {
     const saved = localStorage.getItem("pos-bills");
     if (saved) setAllBills(JSON.parse(saved));
+
+    const onUpdate = (e) => {
+      try {
+        const bills =
+          e && e.detail
+            ? e.detail
+            : JSON.parse(localStorage.getItem("pos-bills") || "[]");
+        setAllBills(bills);
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    window.addEventListener("pos:bills:updated", onUpdate);
+    return () => window.removeEventListener("pos:bills:updated", onUpdate);
   }, []);
 
   const totalRevenue = allBills.reduce(

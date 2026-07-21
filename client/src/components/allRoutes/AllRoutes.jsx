@@ -19,6 +19,7 @@ import Expense from "../pages/Expense";
 import History from "../pages/History";
 import Barrow from "../pages/Barrow";
 import Reports from "../pages/Reports";
+import Sales from "../pages/Sales";
 
 const AllRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser }) => {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ const AllRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser }) => {
         <Route path="home" element={<Home />} />
         <Route path="history" element={<History />} />
         <Route path="barrow" element={<Barrow />} />
+        <Route path="sales" element={<Sales />} />
         <Route path="reports" element={<Reports />} />
         <Route path="add-items" element={<AddItems />} />
         <Route path="stocks" element={<Stocks />} />

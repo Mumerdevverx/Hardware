@@ -63,6 +63,16 @@ const Billing = () => {
     }
   }, []);
 
+  // If there are saved bills and no current selection, default to the latest bill
+  useEffect(() => {
+    if (!currentBill && allBills && allBills.length > 0) {
+      const latest = allBills[0];
+      setCurrentBill(latest);
+      setItems(latest.items || []);
+      setPaymentMethod(latest.paymentMethod || "cash");
+    }
+  }, [allBills]);
+
   // REMOVED: The auto-redirect that was causing the issue
   // Now it will show a message when no items are present
   useEffect(() => {
@@ -78,8 +88,13 @@ const Billing = () => {
   };
 
   const handleDownload = () => {
-    addToast("Downloading PDF invoice...", "success");
-    window.print();
+    const bill = getShareBill();
+    if (!bill) {
+      addToast("No bill available to export", "error");
+      return;
+    }
+    addToast("Preparing PDF...", "success");
+    openPrintable(bill);
   };
 
   const billNumber = `BILL-${Date.now()}`;
@@ -117,43 +132,18 @@ const Billing = () => {
       setAllBills(bills);
       setCurrentBill(billData);
       localStorage.removeItem(CART_STORAGE_KEY);
+      // dispatch update so other components (Reports) refresh
+      try {
+        window.dispatchEvent(
+          new CustomEvent("pos:bills:updated", { detail: bills }),
+        );
+      } catch (e) {}
     } catch (error) {
       console.error("Error saving bill:", error);
     }
   };
 
-  const getPeriodTotals = (days) => {
-    const now = Date.now();
-    const msInDay = 24 * 60 * 60 * 1000;
-    const startTime = now - days * msInDay;
-    return allBills.reduce(
-      (acc, bill) => {
-        const billTime = new Date(bill.date).getTime();
-        if (billTime >= startTime) {
-          const billRevenue = bill.items?.reduce((sum, item) => {
-            return (
-              sum + Number(item.salePrice || 0) * Number(item.quantity || 0)
-            );
-          }, 0);
-          const billProfit = bill.items?.reduce((sum, item) => {
-            const cost = Number(item.costPrice || item.purchasePrice || 0);
-            return (
-              sum +
-              (Number(item.salePrice || 0) - cost) * Number(item.quantity || 0)
-            );
-          }, 0);
-          acc.revenue += billRevenue;
-          acc.profit += billProfit;
-        }
-        return acc;
-      },
-      { revenue: 0, profit: 0 },
-    );
-  };
-
-  const dailyTotals = getPeriodTotals(1);
-  const weeklyTotals = getPeriodTotals(7);
-  const monthlyTotals = getPeriodTotals(30);
+  // Sales totals moved to dedicated Sales page
 
   // Handle cash payment
   const handleCashPayment = () => {
@@ -237,9 +227,76 @@ const Billing = () => {
     addToast("Online payment successful!", "success");
   };
 
+  const buildShareText = (bill) => {
+    if (!bill) return "";
+    const lines = [];
+    lines.push(`Invoice ${bill.id || billNumber}`);
+    lines.push("");
+    lines.push(`Customer: ${bill.customer?.name || ""}`);
+    lines.push(`Phone: ${bill.customer?.phone || ""}`);
+    lines.push("");
+    lines.push("Items:");
+    (bill.items || []).forEach((item) =>
+      lines.push(
+        `- ${item.name} x${item.quantity} @ ₹${Number(item.salePrice || 0).toFixed(2)}`,
+      ),
+    );
+    lines.push("");
+    lines.push(`Subtotal: ₹${Number(bill.subtotal || 0).toFixed(2)}`);
+    lines.push(`Grand Total: ₹${Number(bill.grandTotal || 0).toFixed(2)}`);
+    lines.push("");
+    lines.push("Thank you!");
+    return lines.join("\n");
+  };
+
+  const getShareBill = () => {
+    if (currentBill) return currentBill;
+    if (allBills && allBills.length > 0) return allBills[0];
+    if (items && items.length > 0)
+      return {
+        id: billNumber,
+        date: new Date().toISOString(),
+        customer: { name: customerName, phone: customerPhone },
+        items,
+        subtotal,
+        grandTotal,
+      };
+    return null;
+  };
+
   const getWhatsAppMessage = () => {
-    const raw = `Invoice ${billNumber}\n\nCustomer: ${customerName}\nPhone: ${customerPhone}\n\nItems:\n${items.map((item) => `- ${item.name} x${item.quantity} @ ₹${Number(item.salePrice || 0).toFixed(2)}`).join("\n")}\n\nSubtotal: ₹${subtotal.toFixed(2)}\nGrand Total: ₹${grandTotal.toFixed(2)}\n\nThank you!`;
+    const bill = getShareBill();
+    const raw = buildShareText(bill);
     return `https://wa.me/?text=${encodeURIComponent(raw)}`;
+  };
+
+  const openPrintable = (bill) => {
+    if (!bill) {
+      addToast("Nothing to print", "error");
+      return;
+    }
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${bill.id}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}h1{color:#1e3a8a}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}</style></head><body><h1>Invoice ${bill.id}</h1><p>Customer: ${bill.customer?.name || ""} - ${bill.customer?.phone || ""}</p><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${(bill.items || []).map((it) => `<tr><td>${it.name}</td><td>${it.quantity}</td><td>₹${Number(it.salePrice || 0).toFixed(2)}</td><td>₹${(Number(it.salePrice || 0) * Number(it.quantity || 0)).toFixed(2)}</td></tr>`).join("")}</tbody></table><h3>Total: ₹${Number(bill.grandTotal || 0).toFixed(2)}</h3></body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) {
+      addToast("Popup blocked. Allow popups to download PDF.", "error");
+      return;
+    }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => {
+      w.print();
+    }, 300);
+  };
+
+  const selectBill = (bill) => {
+    if (!bill) return;
+    setCurrentBill(bill);
+    // populate items view with selected bill so invoice shows selected bill
+    setItems(bill.items || []);
+    setPaymentMethod(bill.paymentMethod || "cash");
+    // scroll to top so invoice is visible
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle payment submit
@@ -334,6 +391,23 @@ const Billing = () => {
               <History size={20} /> {showHistory ? "Hide" : "Show"} History (
               {allBills.length})
             </button>
+            <button
+              onClick={() => {
+                const bill = getShareBill();
+                openPrintable(bill);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              <Download size={20} /> PDF
+            </button>
+            <a
+              href={getWhatsAppMessage()}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              <ShoppingCart size={20} /> WhatsApp
+            </a>
           </div>
         </div>
 
@@ -367,52 +441,69 @@ const Billing = () => {
                 </p>
               ) : (
                 <div className="max-h-64 overflow-y-auto space-y-2">
-                  {allBills.map((bill, index) => (
-                    <div
-                      key={index}
-                      className={`bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition border-l-4 ${
-                        bill.status === "Paid"
-                          ? "border-green-500"
-                          : "border-orange-500"
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-bold text-gray-800 text-sm">
-                            {bill.id}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(bill.date)}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            <span className="font-medium">Customer:</span>{" "}
-                            {bill.customer?.name || "N/A"}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            <span className="font-medium">Items:</span>{" "}
-                            {bill.items?.length || 0}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-blue-600">
-                            ₹{bill.grandTotal?.toFixed(2)}
-                          </p>
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                              bill.status === "Paid"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-orange-100 text-orange-700"
-                            }`}
-                          >
-                            {bill.status || "Pending"}
-                          </span>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {bill.paymentType || bill.paymentMethod}
-                          </p>
+                  {allBills.map((bill, index) => {
+                    const selected = currentBill && currentBill.id === bill.id;
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => selectBill(bill)}
+                        className={`rounded-lg p-3 transition cursor-pointer border-l-4 ${
+                          selected
+                            ? "bg-blue-50 border-blue-500"
+                            : "bg-gray-50 hover:bg-gray-100"
+                        } ${bill.status === "Paid" ? (selected ? "" : "border-green-500") : selected ? "" : "border-orange-500"}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-bold text-gray-800 text-sm">
+                              {bill.id}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatDate(bill.date)}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              <span className="font-medium">Customer:</span>{" "}
+                              {bill.customer?.name || "N/A"}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              <span className="font-medium">Items:</span>{" "}
+                              {bill.items?.length || 0}
+                            </p>
+                          </div>
+                          <div className="text-right flex flex-col items-end gap-2">
+                            <p className="text-lg font-bold text-blue-600">
+                              ₹{bill.grandTotal?.toFixed(2)}
+                            </p>
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${bill.status === "Paid" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}
+                            >
+                              {bill.status || "Pending"}
+                            </span>
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openPrintable(bill);
+                                }}
+                                className="text-sm px-2 py-1 bg-blue-600 text-white rounded"
+                              >
+                                PDF
+                              </button>
+                              <a
+                                onClick={(e) => e.stopPropagation()}
+                                href={`https://wa.me/?text=${encodeURIComponent(buildShareText(bill))}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sm px-2 py-1 bg-green-600 text-white rounded"
+                              >
+                                WhatsApp
+                              </a>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -463,35 +554,7 @@ const Billing = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Daily Sales</p>
-          <p className="text-2xl font-bold text-blue-600">
-            ₹{dailyTotals.revenue.toFixed(2)}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Profit: ₹{dailyTotals.profit.toFixed(2)}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Weekly Sales</p>
-          <p className="text-2xl font-bold text-blue-600">
-            ₹{weeklyTotals.revenue.toFixed(2)}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Profit: ₹{weeklyTotals.profit.toFixed(2)}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Monthly Sales</p>
-          <p className="text-2xl font-bold text-blue-600">
-            ₹{monthlyTotals.revenue.toFixed(2)}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Profit: ₹{monthlyTotals.profit.toFixed(2)}
-          </p>
-        </div>
-      </div>
+      {/* Sales totals removed from Billing page; use Sales page in sidebar */}
 
       {/* Bill Card */}
       <div className="bg-white rounded-xl shadow-lg max-w-4xl mx-auto overflow-hidden">
@@ -712,52 +775,69 @@ const Billing = () => {
               </p>
             ) : (
               <div className="max-h-64 overflow-y-auto space-y-2">
-                {allBills.map((bill, index) => (
-                  <div
-                    key={index}
-                    className={`bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition border-l-4 ${
-                      bill.status === "Paid"
-                        ? "border-green-500"
-                        : "border-orange-500"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">
-                          {bill.id}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatDate(bill.date)}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          <span className="font-medium">Customer:</span>{" "}
-                          {bill.customer?.name || "N/A"}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">Items:</span>{" "}
-                          {bill.items?.length || 0}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-blue-600">
-                          ₹{bill.grandTotal?.toFixed(2)}
-                        </p>
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                            bill.status === "Paid"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-orange-100 text-orange-700"
-                          }`}
-                        >
-                          {bill.status || "Pending"}
-                        </span>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {bill.paymentType || bill.paymentMethod}
-                        </p>
+                {allBills.map((bill, index) => {
+                  const selected = currentBill && currentBill.id === bill.id;
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => selectBill(bill)}
+                      className={`rounded-lg p-3 transition cursor-pointer border-l-4 ${
+                        selected
+                          ? "bg-blue-50 border-blue-500"
+                          : "bg-gray-50 hover:bg-gray-100"
+                      } ${bill.status === "Paid" ? (selected ? "" : "border-green-500") : selected ? "" : "border-orange-500"}`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-gray-800 text-sm">
+                            {bill.id}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDate(bill.date)}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            <span className="font-medium">Customer:</span>{" "}
+                            {bill.customer?.name || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            <span className="font-medium">Items:</span>{" "}
+                            {bill.items?.length || 0}
+                          </p>
+                        </div>
+                        <div className="text-right flex flex-col items-end gap-2">
+                          <p className="text-lg font-bold text-blue-600">
+                            ₹{bill.grandTotal?.toFixed(2)}
+                          </p>
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${bill.status === "Paid" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}
+                          >
+                            {bill.status || "Pending"}
+                          </span>
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPrintable(bill);
+                              }}
+                              className="text-sm px-2 py-1 bg-blue-600 text-white rounded"
+                            >
+                              PDF
+                            </button>
+                            <a
+                              onClick={(e) => e.stopPropagation()}
+                              href={`https://wa.me/?text=${encodeURIComponent(buildShareText(bill))}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sm px-2 py-1 bg-green-600 text-white rounded"
+                            >
+                              WhatsApp
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

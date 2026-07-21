@@ -19,6 +19,7 @@ const menuItems = [
   { title: "History", icon: <HistoryIcon size={20} />, path: "/history" },
   { title: "Barrow", icon: <DollarSign size={20} />, path: "/barrow" },
   { title: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+  { title: "Sales", icon: <DollarSign size={20} />, path: "/sales" },
   { title: "Add Items", icon: <Package size={20} />, path: "/add-items" },
   { title: "Stocks", icon: <Layers size={20} />, path: "/stocks" },
   { title: "Suppliers", icon: <Truck size={20} />, path: "/suppliers" },
