@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import DefaultLayout from "../layout/DefaultLayout";
+import ProtectedRoute from "../layout/ProtectedRoute";
 
 // Auth Pages
 import Login from "../auth/Login";
@@ -30,20 +31,32 @@ const AllRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser }) => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+      <Route
+        path="/login"
+        element={
+          <Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
+        }
+      />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgetPassword />} />
 
       {/* Protected Routes with Layout */}
-      <Route element={<DefaultLayout user={user} onLogout={handleLogout} />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/add-items" element={<AddItems />} />
-        <Route path="/stocks" element={<Stocks />} />
-        <Route path="/billing" element={<Billing />} />
-        <Route path="/suppliers" element={<Suppliers />} />
-        <Route path="/dealers" element={<Dealers />} />
-        <Route path="/expense" element={<Expense />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <DefaultLayout user={user} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Home />} />
+        <Route path="home" element={<Home />} />
+        <Route path="add-items" element={<AddItems />} />
+        <Route path="stocks" element={<Stocks />} />
+        <Route path="billing" element={<Billing />} />
+        <Route path="suppliers" element={<Suppliers />} />
+        <Route path="dealers" element={<Dealers />} />
+        <Route path="expense" element={<Expense />} />
       </Route>
     </Routes>
   );
