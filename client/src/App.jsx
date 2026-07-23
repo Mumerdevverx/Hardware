@@ -9,22 +9,38 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("pos-user");
-    const storedToken = localStorage.getItem("pos-token");
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
+    try {
+      const storedUser = localStorage.getItem("pos-user");
+      const storedToken = localStorage.getItem("pos-token");
+
+      if (
+        storedUser &&
+        storedUser !== "undefined" &&
+        storedUser !== "null" &&
+        storedToken
+      ) {
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Invalid user data in localStorage:", error);
+
+      localStorage.removeItem("pos-user");
+      localStorage.removeItem("pos-token");
+
+      setUser(null);
+      setIsAuthenticated(false);
     }
   }, []);
 
   return (
     <ToastProvider>
       <Router>
-        <AllRoutes 
-          isAuthenticated={isAuthenticated} 
-          setIsAuthenticated={setIsAuthenticated} 
-          user={user} 
-          setUser={setUser} 
+        <AllRoutes
+          isAuthenticated={isAuthenticated}
+          setIsAuthenticated={setIsAuthenticated}
+          user={user}
+          setUser={setUser}
         />
       </Router>
     </ToastProvider>

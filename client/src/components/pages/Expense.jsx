@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { useToast } from "../toast/ToastProvider";
 
 const STORAGE_KEY = "pos-expenses";
@@ -65,7 +65,7 @@ const Expense = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowForm((s) => !s)}
+            onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus size={16} /> Add Expense
@@ -121,78 +121,85 @@ const Expense = () => {
           </div>
         </div>
 
-        <div>
-          {showForm && (
-            <form
-              onSubmit={handleAdd}
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
-            >
-              <h3 className="font-semibold mb-3">New Expense</h3>
-              <div className="space-y-3">
+        
+      </div>
+
+      {/* Modal/Popup */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">New Expense</h3>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAdd}>
+              <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-gray-600">Amount</label>
+                  <label className="text-sm font-medium text-gray-700">Amount</label>
                   <input
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded"
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0.00"
                     type="number"
                     step="0.01"
+                    autoFocus
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Category</label>
+                  <label className="text-sm font-medium text-gray-700">Category</label>
                   <input
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded"
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter category"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Note</label>
+                  <label className="text-sm font-medium text-gray-700">Note</label>
                   <input
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded"
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Add a note (optional)"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Date</label>
+                  <label className="text-sm font-medium text-gray-700">Date</label>
                   <input
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded"
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     type="date"
                   />
                 </div>
-                <div className="flex gap-2">
+                
+                <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded"
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Save
+                    Save Expense
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="flex-1 border px-4 py-2 rounded"
+                    className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             </form>
-          )}
-
-          {!showForm && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-              <p className="text-sm text-gray-500">
-                Click "Add Expense" to add today's expense.
-              </p>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
