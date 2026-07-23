@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useToast } from "../toast/ToastProvider";
 import { History as HistoryIcon, Trash2 } from "lucide-react";
 
@@ -85,7 +85,7 @@ const History = () => {
                 <div className="rounded-xl bg-green-50 p-4">
                   <p className="text-xs text-gray-500">Total</p>
                   <p className="font-semibold text-gray-900">
-                    ₹{bill.grandTotal?.toFixed(2)}
+                    ₨{bill.grandTotal?.toFixed(2)}
                   </p>
                 </div>
                 <div className="rounded-xl bg-orange-50 p-4">

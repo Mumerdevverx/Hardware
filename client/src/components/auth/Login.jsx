@@ -34,8 +34,8 @@ const Login = ({ setIsAuthenticated, setUser }) => {
       }
 
       localStorage.setItem("pos-token", data.token);
-      localStorage.setItem("pos-user", JSON.stringify(data.user));
-      setUser(data.user);
+      localStorage.setItem("pos-user", JSON.stringify(data.data));
+      setUser(data.data);
       setIsAuthenticated(true);
       addToast("Login successful!", "success");
       navigate("/home");

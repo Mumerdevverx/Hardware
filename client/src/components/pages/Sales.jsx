@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Wallet, Calendar, Clock } from "lucide-react";
 
@@ -74,10 +74,10 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-500">Daily Sales</p>
               <p className="text-2xl font-bold text-blue-600">
-                ₹{daily.revenue.toFixed(2)}
+                ₨{daily.revenue.toFixed(2)}
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Profit: ₹{daily.profit.toFixed(2)}
+                Profit: ₨{daily.profit.toFixed(2)}
               </p>
             </div>
           </div>
@@ -89,10 +89,10 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-500">Weekly Sales</p>
               <p className="text-2xl font-bold text-blue-600">
-                ₹{weekly.revenue.toFixed(2)}
+                ₨{weekly.revenue.toFixed(2)}
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Profit: ₹{weekly.profit.toFixed(2)}
+                Profit: ₨{weekly.profit.toFixed(2)}
               </p>
             </div>
           </div>
@@ -104,10 +104,10 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-500">Monthly Sales</p>
               <p className="text-2xl font-bold text-blue-600">
-                ₹{monthly.revenue.toFixed(2)}
+                ₨{monthly.revenue.toFixed(2)}
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Profit: ₹{monthly.profit.toFixed(2)}
+                Profit: ₨{monthly.profit.toFixed(2)}
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ const Sales = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-bold">
-                    ₹{Number(b.grandTotal || 0).toFixed(2)}
+                    ₨{Number(b.grandTotal || 0).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500">
                     {b.status || "Pending"}

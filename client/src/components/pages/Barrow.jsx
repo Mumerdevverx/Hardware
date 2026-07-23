@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useToast } from "../toast/ToastProvider";
 import { DollarSign, Users, ShoppingBag } from "lucide-react";
 
@@ -65,7 +65,7 @@ const Barrow = () => {
             Outstanding Amount
           </p>
           <p className="text-3xl font-bold text-blue-600 mt-3">
-            ₹{totalCredit.toFixed(2)}
+            ₨{totalCredit.toFixed(2)}
           </p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -98,7 +98,7 @@ const Barrow = () => {
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Outstanding</p>
                   <p className="font-semibold text-blue-600">
-                    ₹{bill.grandTotal?.toFixed(2)}
+                    ₨{bill.grandTotal?.toFixed(2)}
                   </p>
                 </div>
               </div>

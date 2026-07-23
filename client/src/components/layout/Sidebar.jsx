@@ -3,10 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
-  Truck,
   Layers,
   Receipt,
-  Users,
   LogOut,
   Store,
   History as HistoryIcon,
@@ -22,7 +20,6 @@ const menuItems = [
   { title: "Sales", icon: <DollarSign size={20} />, path: "/sales" },
   { title: "Add Items", icon: <Package size={20} />, path: "/add-items" },
   { title: "Stocks", icon: <Layers size={20} />, path: "/stocks" },
-  { title: "Suppliers", icon: <Truck size={20} />, path: "/suppliers" },
   { title: "Dealers", icon: <Store size={20} />, path: "/dealers" },
   { title: "Billing", icon: <Receipt size={20} />, path: "/billing" },
   { title: "Expense", icon: <Receipt size={20} />, path: "/expense" },

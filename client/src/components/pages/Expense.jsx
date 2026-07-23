@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useToast } from "../toast/ToastProvider";
 
@@ -96,7 +96,7 @@ const Expense = () => {
                   >
                     <div>
                       <p className="font-medium">
-                        ₹{Number(exp.amount).toFixed(2)}{" "}
+                        ₨{Number(exp.amount).toFixed(2)}{" "}
                         <span className="text-sm text-gray-500">
                           · {exp.category}
                         </span>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../config";
 import {
@@ -55,7 +55,7 @@ const Home = () => {
   const loadItems = async () => {
     try {
       const token = localStorage.getItem("pos-token");
-      const response = await fetch(`${API_URL}/api/items`, {
+      const response = await fetch(`${API_URL}/api/products`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -65,10 +65,10 @@ const Home = () => {
 
         if (data && Array.isArray(data)) {
           itemsArray = data;
-        } else if (data && data.items && Array.isArray(data.items)) {
-          itemsArray = data.items;
         } else if (data && data.data && Array.isArray(data.data)) {
           itemsArray = data.data;
+        } else if (data && data.items && Array.isArray(data.items)) {
+          itemsArray = data.items;
         } else {
           itemsArray = [];
         }
@@ -170,7 +170,7 @@ const Home = () => {
   // Calculate total
   const calculateTotal = () => {
     return selectedItems.reduce((sum, item) => {
-      return sum + Number(item.salePrice || 0) * Number(item.quantity || 0);
+      return sum + Number(item.sellingPrice || 0) * Number(item.quantity || 0);
     }, 0);
   };
 
@@ -350,7 +350,7 @@ const Home = () => {
                   </h3>
                   <div className="flex justify-between items-center mt-2">
                     <p className="text-lg font-bold text-blue-600">
-                      ₹{Number(item.salePrice || 0).toFixed(2)}
+                      ₨{Number(item.sellingPrice || 0).toFixed(2)}
                     </p>
                     <button
                       onClick={(e) => {
@@ -426,7 +426,7 @@ const Home = () => {
                               {item.name}
                             </p>
                             <p className="text-sm text-gray-500">
-                              ₹{Number(item.salePrice || 0).toFixed(2)}
+                              ₨{Number(item.sellingPrice || 0).toFixed(2)}
                             </p>
                           </div>
                           <button
@@ -459,9 +459,9 @@ const Home = () => {
                             </button>
                           </div>
                           <p className="font-bold text-blue-600 text-lg">
-                            ₹
+                             ₨
                             {(
-                              Number(item.salePrice || 0) *
+                              Number(item.sellingPrice || 0) *
                               Number(item.quantity || 0)
                             ).toFixed(2)}
                           </p>
@@ -477,7 +477,7 @@ const Home = () => {
                         Total:
                       </span>
                       <span className="text-2xl font-bold text-blue-600">
-                        ₹{calculateTotal().toFixed(2)}
+                        ₨{calculateTotal().toFixed(2)}
                       </span>
                     </div>
 

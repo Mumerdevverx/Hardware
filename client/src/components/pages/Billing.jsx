@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Printer,
@@ -118,7 +118,7 @@ const Billing = () => {
 
   // Calculate totals (NO TAX)
   const subtotal = items.reduce((sum, item) => {
-    return sum + Number(item.salePrice || 0) * Number(item.quantity || 0);
+    return sum + Number(item.sellingPrice || 0) * Number(item.quantity || 0);
   }, 0);
   const grandTotal = subtotal;
 
@@ -173,7 +173,7 @@ const Billing = () => {
     const cash = parseFloat(cashAmount);
     if (!cash || cash < grandTotal) {
       addToast(
-        `Please enter amount greater than or equal to ₹${grandTotal.toFixed(2)}`,
+        `Please enter amount greater than or equal to ₨${grandTotal.toFixed(2)}`,
         "error",
       );
       return;
@@ -199,7 +199,7 @@ const Billing = () => {
       paymentType: "Hand Cash",
     };
     saveBillToStorage(billData);
-    addToast(`Payment successful! Change: ₹${change.toFixed(2)}`, "success");
+    addToast(`Payment successful! Change: ₨${change.toFixed(2)}`, "success");
     setShowPaymentModal(false);
     setShowCompleteModal(true);
   };
@@ -238,12 +238,12 @@ const Billing = () => {
     lines.push("Items:");
     (bill.items || []).forEach((item) =>
       lines.push(
-        `- ${item.name} x${item.quantity} @ ₹${Number(item.salePrice || 0).toFixed(2)}`,
+        `- ${item.name} x${item.quantity} @ ₨${Number(item.salePrice || 0).toFixed(2)}`,
       ),
     );
     lines.push("");
-    lines.push(`Subtotal: ₹${Number(bill.subtotal || 0).toFixed(2)}`);
-    lines.push(`Grand Total: ₹${Number(bill.grandTotal || 0).toFixed(2)}`);
+    lines.push(`Subtotal: ₨${Number(bill.subtotal || 0).toFixed(2)}`);
+    lines.push(`Grand Total: ₨${Number(bill.grandTotal || 0).toFixed(2)}`);
     lines.push("");
     lines.push("Thank you!");
     return lines.join("\n");
@@ -275,7 +275,7 @@ const Billing = () => {
       addToast("Nothing to print", "error");
       return;
     }
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${bill.id}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}h1{color:#1e3a8a}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}</style></head><body><h1>Invoice ${bill.id}</h1><p>Customer: ${bill.customer?.name || ""} - ${bill.customer?.phone || ""}</p><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${(bill.items || []).map((it) => `<tr><td>${it.name}</td><td>${it.quantity}</td><td>₹${Number(it.salePrice || 0).toFixed(2)}</td><td>₹${(Number(it.salePrice || 0) * Number(it.quantity || 0)).toFixed(2)}</td></tr>`).join("")}</tbody></table><h3>Total: ₹${Number(bill.grandTotal || 0).toFixed(2)}</h3></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${bill.id}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}h1{color:#1e3a8a}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}</style></head><body><h1>Invoice ${bill.id}</h1><p>Customer: ${bill.customer?.name || ""} - ${bill.customer?.phone || ""}</p><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${(bill.items || []).map((it) => `<tr><td>${it.name}</td><td>${it.quantity}</td><td>₨${Number(it.salePrice || 0).toFixed(2)}</td><td>₨${(Number(it.salePrice || 0) * Number(it.quantity || 0)).toFixed(2)}</td></tr>`).join("")}</tbody></table><h3>Total: ₨${Number(bill.grandTotal || 0).toFixed(2)}</h3></body></html>`;
     const w = window.open("", "_blank");
     if (!w) {
       addToast("Popup blocked. Allow popups to download PDF.", "error");
@@ -472,7 +472,7 @@ const Billing = () => {
                           </div>
                           <div className="text-right flex flex-col items-end gap-2">
                             <p className="text-lg font-bold text-blue-600">
-                              ₹{bill.grandTotal?.toFixed(2)}
+                              ₨{bill.grandTotal?.toFixed(2)}
                             </p>
                             <span
                               className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${bill.status === "Paid" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}
@@ -657,7 +657,7 @@ const Billing = () => {
                       </p>
                     </td>
                     <td className="py-3 px-2 text-right">
-                      ₹{Number(item.salePrice || 0).toFixed(2)}
+                      ₨{Number(item.sellingPrice || 0).toFixed(2)}
                     </td>
                     <td className="py-3 px-2 text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -681,9 +681,9 @@ const Billing = () => {
                       </div>
                     </td>
                     <td className="py-3 px-2 text-right font-bold text-blue-600">
-                      ₹
+                      ₨
                       {(
-                        Number(item.salePrice || 0) * Number(item.quantity || 0)
+                        Number(item.sellingPrice || 0) * Number(item.quantity || 0)
                       ).toFixed(2)}
                     </td>
                   </tr>
@@ -698,12 +698,12 @@ const Billing = () => {
               <div className="w-64">
                 <div className="flex justify-between py-2">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-medium">₨{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between py-2 border-t mt-2">
                   <span className="text-lg font-bold">Grand Total:</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    ₹{grandTotal.toFixed(2)}
+                    ₨{grandTotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between py-2 text-sm text-gray-500">
@@ -806,7 +806,7 @@ const Billing = () => {
                         </div>
                         <div className="text-right flex flex-col items-end gap-2">
                           <p className="text-lg font-bold text-blue-600">
-                            ₹{bill.grandTotal?.toFixed(2)}
+                            ₨{bill.grandTotal?.toFixed(2)}
                           </p>
                           <span
                             className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${bill.status === "Paid" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}
@@ -917,7 +917,7 @@ const Billing = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Total Amount</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    ₹{grandTotal.toFixed(2)}
+                    ₨{grandTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -968,7 +968,7 @@ const Billing = () => {
                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-sm text-gray-600">Return Amount</p>
                       <p className="text-lg font-bold text-green-600">
-                        ₹{returnAmount.toFixed(2)}
+                        ₨{returnAmount.toFixed(2)}
                       </p>
                     </div>
                   )}
@@ -1000,7 +1000,7 @@ const Billing = () => {
             </h2>
             <p className="text-gray-500 mb-1">Invoice #{billNumber}</p>
             <p className="text-gray-500 mb-4">
-              Amount: ₹{grandTotal.toFixed(2)}
+              Amount: ₨{grandTotal.toFixed(2)}
             </p>
             <div className="bg-gray-50 rounded-lg p-3 mb-4 text-left">
               <p className="text-sm text-gray-600">

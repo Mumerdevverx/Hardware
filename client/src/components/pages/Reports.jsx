@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { BarChart3, TrendingUp } from "lucide-react";
 import { useToast } from "../toast/ToastProvider";
 
@@ -123,13 +123,13 @@ const Reports = () => {
             <div className="rounded-xl bg-green-50 p-4">
               <p className="text-sm text-gray-500">Profit</p>
               <p className="font-semibold text-green-700">
-                ₹{totalProfit.toFixed(2)}
+                ₨{totalProfit.toFixed(2)}
               </p>
             </div>
             <div className="rounded-xl bg-blue-50 p-4">
               <p className="text-sm text-gray-500">Revenue</p>
               <p className="font-semibold text-gray-900">
-                ₹{totalRevenue.toFixed(2)}
+                ₨{totalRevenue.toFixed(2)}
               </p>
             </div>
             <div className="rounded-xl bg-yellow-50 p-4">

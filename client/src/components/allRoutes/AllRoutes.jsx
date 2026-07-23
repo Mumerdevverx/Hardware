@@ -13,7 +13,6 @@ import Home from "../pages/Home";
 import AddItems from "../pages/AddItems";
 import Stocks from "../pages/Stocks";
 import Billing from "../pages/Billing";
-import Suppliers from "../pages/Suppliers";
 import Dealers from "../pages/Dealers";
 import Expense from "../pages/Expense";
 import History from "../pages/History";
@@ -62,7 +61,6 @@ const AllRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser }) => {
         <Route path="add-items" element={<AddItems />} />
         <Route path="stocks" element={<Stocks />} />
         <Route path="billing" element={<Billing />} />
-        <Route path="suppliers" element={<Suppliers />} />
         <Route path="dealers" element={<Dealers />} />
         <Route path="expense" element={<Expense />} />
       </Route>
